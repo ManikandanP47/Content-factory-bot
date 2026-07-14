@@ -1,0 +1,40 @@
+niche: productivity / founder tips
+tone: direct, punchy, no fluff, speak like a peer not a lecturer
+language: en
+
+voice:
+  # Prefer Kokoro when installed; otherwise edge-tts neural voice
+  provider: auto  # auto | kokoro | edge
+  kokoro_voice: af_heart
+  kokoro_lang: a
+  edge_voice: en-US-JennyNeural
+  speed: 1.0
+
+audio:
+  music_volume_db: -22
+  music_dir: assets/music
+  normalize: true
+
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  brand:
+    bg_top: "#0B1F2A"
+    bg_bottom: "#143447"
+    accent: "#E8A54B"
+    text: "#F4F7F5"
+    muted: "#A8B8C0"
+    font_display: "DM Sans"
+    font_body: "DM Sans"
+
+channels:
+  drive_root_folder: Content Factory
+  youtube_privacy: private
+  youtube_category_id: "22"
+  instagram_share_to_feed: true
+
+ollama:
+  base_url: http://127.0.0.1:11434
+  model: llama3.2
+  timeout_seconds: 120
