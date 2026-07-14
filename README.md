@@ -58,15 +58,19 @@ Job files land in `output/<job_id>/` (`script.json`, voice/mixed audio, `props.j
 
 Config: [`config/default.yaml`](config/default.yaml). Secrets: copy [`.env.example`](.env.example) → `.env`.
 
-## Voice (free + long-term)
+## Voice (genuine AI male — free + local)
+
+Default is **Piper Ryan** (high-quality neural male), not classic robotic TTS.
 
 | Provider | Cost | Notes |
 |----------|------|--------|
-| **Kokoro-82M** (preferred) | Free, Apache-2.0, local | Natural neural speech; set `voice.provider: kokoro` or `auto` |
-| **edge-tts** (cloud fallback) | Free | Microsoft neural voices; no API key |
-| **macOS `say`** (local fallback) | Free | Used when Kokoro/edge unavailable (e.g. SSL issues) |
+| **Piper Ryan** (default) | Free, local | `en_US-ryan-high` neural male — `pip install piper-tts` |
+| **Kokoro `am_adam`** | Free, local | Optional; needs Python 3.10–3.12 + `./scripts/setup_male_voice.sh` |
+| **edge-tts AndrewNeural** | Free cloud | Microsoft neural male fallback |
+| **macOS Daniel** | Free | Last resort |
 
-`VOICE_PROVIDER=auto|kokoro|edge|macos` in `.env` overrides config.
+Config: `voice.provider: piper` and `piper_model: en_US-ryan-high` in `config/default.yaml`.  
+Override with `VOICE_PROVIDER=piper` in `.env` if needed.
 
 Optional bed music: drop CC0 `.mp3`/`.wav` into `assets/music/` (ducked ~−22 dB).
 

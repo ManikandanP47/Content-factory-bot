@@ -25,6 +25,11 @@ assets/broll/.usage.json
 !assets/broll/*.jpg
 !assets/broll/*.jpeg
 !assets/broll/*.png
+tools/piper/**/*.tar.gz
+tools/piper/piper/
+tools/piper/x64/
+tools/piper/voices/*.onnx
+.venv-voice/
 .DS_Store
 token.json
 token_*.json

@@ -3,13 +3,19 @@ tone: direct, punchy, no fluff, speak like a peer not a lecturer
 language: en
 
 voice:
-  # Prefer Kokoro when installed; then edge-tts; then macOS say
-  provider: auto  # auto | kokoro | edge | macos
-  kokoro_voice: af_heart
+  # Genuine AI male narration (free, local):
+  #   1) Piper Ryan high  → pip install piper-tts (default)
+  #   2) Kokoro am_adam   → optional ./scripts/setup_male_voice.sh
+  #   3) edge-tts AndrewNeural
+  #   4) macOS Daniel
+  provider: piper  # piper | auto | kokoro | edge | macos
+  piper_model: en_US-ryan-high
+  piper_length_scale: 1.05
+  kokoro_voice: am_adam
   kokoro_lang: a
-  edge_voice: en-US-JennyNeural
-  macos_voice: Samantha
-  speed: 1.0
+  edge_voice: en-US-AndrewNeural
+  macos_voice: Daniel
+  speed: 0.95
 
 audio:
   music_volume_db: -26

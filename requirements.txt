@@ -7,10 +7,11 @@ soundfile>=0.12
 numpy>=1.24
 edge-tts>=6.1
 certifi>=2024.0
+piper-tts>=1.4
 google-api-python-client>=2.100
 google-auth-httplib2>=0.2
 google-auth-oauthlib>=1.1
 requests>=2.31
-# Optional humane local TTS (Python 3.10–3.12 recommended):
+# Optional alternate local TTS (Python 3.10–3.12):
 # kokoro>=0.9.4
 # torch
