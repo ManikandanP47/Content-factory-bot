@@ -65,8 +65,9 @@ def _synthesize_macos_say(text: str, out_path: Path, voice: str) -> Path:
         raise RuntimeError("macOS `say` not available")
     aiff = out_path.with_suffix(".aiff")
     wav = out_path.with_suffix(".wav")
-    # Samantha / Ava are natural default English voices on macOS
-    cmd = ["say", "-v", voice, "-o", str(aiff), text]
+    # Insert modest silences between beat chunks for Shorts pacing
+    spoken = text.replace(" … ", "[[slnc 420]] ").replace("…", "[[slnc 280]] ")
+    cmd = ["say", "-v", voice, "-o", str(aiff), spoken]
     subprocess.run(cmd, check=True, capture_output=True)
     if shutil.which("ffmpeg"):
         subprocess.run(

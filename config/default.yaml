@@ -12,7 +12,7 @@ voice:
   speed: 1.0
 
 audio:
-  music_volume_db: -22
+  music_volume_db: -26
   music_dir: assets/music
   normalize: true
 
@@ -21,11 +21,11 @@ video:
   height: 1920
   fps: 30
   brand:
-    bg_top: "#0B1F2A"
-    bg_bottom: "#143447"
-    accent: "#E8A54B"
-    text: "#F4F7F5"
-    muted: "#A8B8C0"
+    bg_top: "#07141C"
+    bg_bottom: "#16384A"
+    accent: "#F0B429"
+    text: "#F7F4EC"
+    muted: "#9EB6C2"
     font_display: "DM Sans"
     font_body: "DM Sans"
 

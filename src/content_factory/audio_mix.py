@@ -44,20 +44,29 @@ def _pick_music(music_dir: Path) -> Path | None:
         p
         for p in music_dir.iterdir()
         if p.suffix.lower() in {".mp3", ".wav", ".m4a", ".aac"}
+        and not p.name.startswith(".")
     ]
     return random.choice(files) if files else None
+
+
+# Professional voice chain: gentle highpass, light compression, broadcast loudnorm
+_VOICE_AF = (
+    "highpass=f=80,"
+    "acompressor=threshold=-18dB:ratio=2.5:attack=15:release=120:makeup=2,"
+    "loudnorm=I=-14:TP=-1.5:LRA=9"
+)
 
 
 def mix_audio(
     voice_path: Path, out_path: Path, config: dict[str, Any]
 ) -> Path:
-    """Normalize voice and optionally duck a bed track under it."""
+    """Normalize voice (highpass + compress + loudnorm) and optionally duck a bed."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     audio_cfg = config.get("audio", {})
     music_rel = audio_cfg.get("music_dir", "assets/music")
     music_dir = resolve_path(music_rel)
     music = _pick_music(music_dir)
-    volume_db = float(audio_cfg.get("music_volume_db", -22))
+    volume_db = float(audio_cfg.get("music_volume_db", -24))
 
     if not _have_ffmpeg():
         # copy through without mix
@@ -67,14 +76,13 @@ def mix_audio(
     out_wav = out_path.with_suffix(".wav")
 
     if music is None:
-        # loudnorm voice only
         cmd = [
             "ffmpeg",
             "-y",
             "-i",
             str(voice_path),
             "-af",
-            "loudnorm=I=-16:TP=-1.5:LRA=11",
+            _VOICE_AF,
             "-ar",
             "48000",
             str(out_wav),
@@ -82,11 +90,13 @@ def mix_audio(
         subprocess.run(cmd, check=True, capture_output=True)
         return out_wav
 
-    # voice + music, music quieter, length follows voice
+    # Soft bed under narration; fade bed in/out, follow voice length
     filter_complex = (
-        f"[1:a]volume={volume_db}dB,aloop=loop=-1:size=2e+09[bed];"
-        f"[0:a]loudnorm=I=-16:TP=-1.5:LRA=11[voice];"
-        f"[voice][bed]amix=inputs=2:duration=first:dropout_transition=2[a]"
+        f"[1:a]volume={volume_db}dB,aloop=loop=-1:size=2e+09,"
+        f"afade=t=in:st=0:d=1.2,afade=t=out:st=999:d=0[bed];"
+        f"[0:a]{_VOICE_AF}[voice];"
+        f"[voice][bed]amix=inputs=2:duration=first:dropout_transition=2,"
+        f"loudnorm=I=-14:TP=-1.5:LRA=9[a]"
     )
     cmd = [
         "ffmpeg",

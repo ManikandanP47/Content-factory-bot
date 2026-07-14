@@ -14,10 +14,17 @@ video/node_modules/
 video/out/
 video/.remotion/
 video/public/job-audio-*
+video/public/broll-*
+assets/broll/.usage.json
 *.mp4
 *.wav
 *.mp3
 *.aiff
+!assets/music/*.mp3
+!assets/music/*.wav
+!assets/broll/*.jpg
+!assets/broll/*.jpeg
+!assets/broll/*.png
 .DS_Store
 token.json
 token_*.json

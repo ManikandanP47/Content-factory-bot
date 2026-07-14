@@ -8,13 +8,31 @@ from pathlib import Path
 from typing import Any
 
 from content_factory.audio_mix import probe_duration_seconds
+from content_factory.broll import fetch_broll
 from content_factory.config import project_root
-from content_factory.models import BrandColors, CaptionCue, RemotionProps, VideoScript
+from content_factory.models import (
+    BrandColors,
+    BrollClip,
+    CaptionCue,
+    RemotionProps,
+    VideoScript,
+)
+
+
+def _screen_line(text: str, max_len: int = 42) -> str:
+    text = " ".join(text.strip().split())
+    if len(text) <= max_len:
+        return text
+    cut = text[: max_len - 1].rsplit(" ", 1)[0]
+    return (cut or text[: max_len - 1]) + "…"
 
 
 def build_caption_cues(script: VideoScript, duration_s: float) -> list[CaptionCue]:
+    # Prefer short on-screen lines (not full spoken paragraphs)
     segments: list[str] = (
-        [script.hook] + [b.on_screen for b in script.beats] + [script.cta]
+        [_screen_line(script.hook, 40)]
+        + [b.on_screen.strip() or _screen_line(b.text) for b in script.beats]
+        + [_screen_line(script.cta, 40)]
     )
     spoken = [script.hook] + [b.text for b in script.beats] + [script.cta]
     weights = [max(1, len(s.split())) for s in spoken]
@@ -69,6 +87,27 @@ def write_remotion_props(
     audio_public_name = f"job-audio-{job_dir.name}{local_audio.suffix}"
     shutil.copy2(local_audio, public_dir / audio_public_name)
 
+    # Photo B-roll (one clip per caption beat) — real footage layer
+    print("[broll] Picking fresh unique stock photos…")
+    raw_clips = fetch_broll(
+        script.topic or script.title,
+        count=max(len(cues), 3),
+        dest_dir=job_dir / "broll",
+        public_dir=public_dir,
+        job_key=job_dir.name,
+    )
+    broll: list[BrollClip] = []
+    for i, cue in enumerate(cues):
+        clip = raw_clips[i % len(raw_clips)]
+        broll.append(
+            BrollClip(
+                src=clip["src"],
+                ken=clip.get("ken", "zoom_in"),
+                start_ms=cue.start_ms,
+                end_ms=cue.end_ms,
+            )
+        )
+
     props = RemotionProps(
         title=script.title.replace(" #Shorts", "").replace(" #shorts", ""),
         hook=script.hook,
@@ -77,6 +116,7 @@ def write_remotion_props(
         brand=brand,
         audio_file=local_audio.name,
         audio_public_name=audio_public_name,
+        broll=broll,
         duration_in_frames=frames,
         fps=fps,
         width=width,

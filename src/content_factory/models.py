@@ -23,11 +23,21 @@ class VideoScript(BaseModel):
     hashtags: list[str] = Field(default_factory=list)
     narration: str = ""
 
+    def narration_parts(self) -> list[str]:
+        """Hook / beats / CTA as separate spoken chunks (for natural pauses)."""
+        if self.narration.strip():
+            return [self.narration.strip()]
+        return [
+            p.strip()
+            for p in [self.hook] + [b.text for b in self.beats] + [self.cta]
+            if p.strip()
+        ]
+
     def full_narration(self) -> str:
         if self.narration.strip():
             return self.narration.strip()
-        parts = [self.hook] + [b.text for b in self.beats] + [self.cta]
-        return " ".join(p.strip() for p in parts if p.strip())
+        # Slightly longer pauses between beats via ellipsis spacing cues
+        return " … ".join(self.narration_parts())
 
 
 class CaptionCue(BaseModel):
@@ -44,6 +54,13 @@ class BrandColors(BaseModel):
     muted: str = "#A8B8C0"
 
 
+class BrollClip(BaseModel):
+    src: str
+    ken: str = "zoom_in"
+    start_ms: int = 0
+    end_ms: int = 0
+
+
 class RemotionProps(BaseModel):
     title: str
     hook: str
@@ -52,6 +69,7 @@ class RemotionProps(BaseModel):
     brand: BrandColors
     audio_file: str
     audio_public_name: str = ""
+    broll: list[BrollClip] = Field(default_factory=list)
     duration_in_frames: int
     fps: int = 30
     width: int = 1080
