@@ -87,20 +87,26 @@ cd video && npx remotion studio
 
 ## Google Drive + YouTube (OAuth)
 
+**Active target:** YouTube channel **MoticateUrself** (Shorts). Instagram is paused for now.
+
 1. Create a [Google Cloud](https://console.cloud.google.com/) project.
 2. Enable **Google Drive API** and **YouTube Data API v3**.
 3. Configure OAuth consent (External / testing OK for personal use).
 4. Create **OAuth client ID** → Application type **Desktop**.
 5. Download JSON → save as `credentials/client_secrets.json`.
-6. First publish opens a browser for consent; token is cached at `credentials/token.json`.
+6. First publish opens a browser for consent — sign in with the Google account that owns **MoticateUrself**. Token is cached at `credentials/token.json`.
 
 ```bash
+# YouTube Shorts only (recommended for now)
+content-factory publish --job <id> --channels youtube
+
+# Optional: also archive to Drive
 content-factory publish --job <id> --channels drive,youtube
 ```
 
-YouTube default privacy is **private** (`YOUTUBE_PRIVACY` / `--privacy`). Add `#Shorts` is handled automatically.
+YouTube default privacy is **private** (`YOUTUBE_PRIVACY` / `--privacy`). Flip to `public` after a successful test. `#Shorts` is added automatically.
 
-## Instagram Reels (Graph API)
+## Instagram Reels (Graph API) — paused
 
 1. Instagram **Professional** (Business/Creator) account linked to a **Facebook Page**.
 2. Meta app with **Instagram Graph API** + `instagram_content_publish`, `pages_show_list`, etc.
@@ -160,7 +166,7 @@ List jobs: `content-factory list-jobs` (or look in `output/`).
 
 The bot is designed to run **on this Mac while you use it** (no server required).
 
-1. Put topics in [`config/topics.txt`](config/topics.txt) (one per line).
+1. Broad topics live in [`config/topics.txt`](config/topics.txt) (one punchy line each). `daily_run.sh` **picks randomly** from topics not yet in `config/.topics_done` (no immediate repeats); when the pool is exhausted it resets and reshuffles. You do not need to hand-pick a topic each day—add/edit lines only if you want to expand the pool.
 2. Ensure Mac timezone is **Asia/Kolkata** (IST).
 3. Install the schedule (produces at **10:00, 14:00, 17:00** IST):
 
@@ -182,7 +188,7 @@ Optional auto-upload after each produce (only when credentials exist):
 ```bash
 # add to ~/.zshrc or a small env file sourced by the script
 export AUTO_PUBLISH=1
-export PUBLISH_CHANNELS=drive,youtube
+export PUBLISH_CHANNELS=youtube   # MoticateUrself Shorts only
 ```
 
 Laptop must be **awake** at those times (not fully shut down). Sleep that allows background work is usually fine.

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Daily Content Factory runner (macOS / laptop awake 09:00–20:00 IST).
+# Picks a random unused topic from config/topics.txt (no immediate repeats via .topics_done).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,33 +27,35 @@ TOPICS="$ROOT/config/topics.txt"
 DONE="$ROOT/config/.topics_done"
 touch "$DONE"
 
-topic=""
+# Collect unused topics (skip blanks / comments). Bash 3.2–safe (no namerefs).
+# When the pool is exhausted, clear .topics_done and reshape from the full list.
+candidates=()
 while IFS= read -r line || [[ -n "$line" ]]; do
   line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
   [[ -z "$line" || "$line" == \#* ]] && continue
   if ! grep -Fxq "$line" "$DONE" 2>/dev/null; then
-    topic="$line"
-    break
+    candidates+=("$line")
   fi
 done < "$TOPICS"
 
-if [[ -z "$topic" ]]; then
-  # recycle: clear done list and take first real topic
+if [[ ${#candidates[@]} -eq 0 ]]; then
   : > "$DONE"
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
     [[ -z "$line" || "$line" == \#* ]] && continue
-    topic="$line"
-    break
+    candidates+=("$line")
   done < "$TOPICS"
 fi
 
-if [[ -z "$topic" ]]; then
+if [[ ${#candidates[@]} -eq 0 ]]; then
   echo "[error] No topics in config/topics.txt" | tee -a "$LOG"
   exit 1
 fi
 
-echo "[run] $(date) IST — producing: $topic" | tee -a "$LOG"
+idx=$((RANDOM % ${#candidates[@]}))
+topic="${candidates[$idx]}"
+
+echo "[run] $(date) IST — producing (random): $topic" | tee -a "$LOG"
 set +e
 content-factory produce --topic "$topic" >>"$LOG" 2>&1
 code=$?
@@ -66,8 +69,9 @@ if [[ $code -eq 0 ]]; then
   if [[ "${AUTO_PUBLISH:-0}" == "1" ]]; then
     job_id="$(ls -1t "$ROOT/output" | grep -v '^logs$' | head -1)"
     if [[ -n "$job_id" ]]; then
-      echo "[publish] $job_id → ${PUBLISH_CHANNELS:-drive,youtube}" | tee -a "$LOG"
-      content-factory publish --job "$job_id" --channels "${PUBLISH_CHANNELS:-drive,youtube}" >>"$LOG" 2>&1 || true
+      # Default: YouTube Shorts only (MoticateUrself). Set PUBLISH_CHANNELS to override.
+      echo "[publish] $job_id → ${PUBLISH_CHANNELS:-youtube}" | tee -a "$LOG"
+      content-factory publish --job "$job_id" --channels "${PUBLISH_CHANNELS:-youtube}" >>"$LOG" 2>&1 || true
     fi
   fi
 else

@@ -57,7 +57,17 @@ def get_google_credentials(
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(secrets), scopes
             )
-            creds = flow.run_local_server(port=0)
+            # select_account: works with a single usable Gmail — confirms identity
+            # without forcing a second Google profile/login on this Mac.
+            auth_kwargs: dict = {
+                "port": 0,
+                "access_type": "offline",
+                "prompt": "select_account",
+            }
+            login_hint = os.getenv("GOOGLE_LOGIN_HINT", "").strip()
+            if login_hint:
+                auth_kwargs["login_hint"] = login_hint
+            creds = flow.run_local_server(**auth_kwargs)
         token_path.parent.mkdir(parents=True, exist_ok=True)
         token_path.write_text(creds.to_json(), encoding="utf-8")
 

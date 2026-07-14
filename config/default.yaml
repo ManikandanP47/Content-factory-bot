@@ -40,8 +40,12 @@ video:
 
 channels:
   drive_root_folder: Content Factory
-  youtube_privacy: private
+  # Target channel for Shorts (OAuth must be with this channel's Google account)
+  youtube_channel: MoticateUrself
+  youtube_privacy: private  # flip to public after first successful test upload
   youtube_category_id: "22"
+  # Instagram paused for now — YouTube Shorts only
+  instagram_enabled: false
   instagram_share_to_feed: true
 
 ollama:

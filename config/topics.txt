@@ -1,13 +1,80 @@
 # One topic per line. Lines starting with # are ignored.
-# daily_run.sh consumes the next unused topic (checks off via .topics_done).
+# daily_run.sh picks a random unused topic each run (tracks via .topics_done).
+# When every topic has been used once, the tracker resets and the pool reshuffles.
+# Broad mass-appeal Shorts/Reels prompts (faceless-friendly, India + global).
 
-Stop building features nobody asked for
-Why deep work beats busy work
-Ship a tiny version this week
-One metric for seven days
-Clarity beats hustle for founders
-Your calendar is lying to you
-Kill the meeting that kills your week
-Operators win quietly
-Don't confuse motion with progress
+Stop scrolling and start finishing one small thing
+The 2-minute rule that kills procrastination
+Wake up 30 minutes earlier for one week
+Why your morning phone check ruins your day
+Build a 5-habit stack that actually sticks
+How to quit a bad habit without willpower
 Protect two deep-work blocks tomorrow
+Silence notifications for one focused hour
+Your brain needs boredom to think clearly
+Do the hard thing first before 10 AM
+Why multitasking makes you slower
+One closed loop a day changes everything
+Write tomorrow's top three tonight
+Walk 20 minutes when your mind is noisy
+Tiny progress beats perfect plans
+Why consistency beats intensity
+Delete one app that steals your attention
+How to say no without feeling guilty
+Your calendar is lying to you
+Batch similar tasks and free your brain
+Money is a skill you can practice
+Pay yourself first even if it is tiny
+Track expenses for seven days straight
+The wealth habit most people skip
+Stop comparing your income to reels
+Delay one impulse purchase this week
+Save before you upgrade your lifestyle
+Why financial peace beats financial flex
+One rule for credit card debt
+Invest in skills that outlive any job
+Clarity beats hustle for your career
+Ship a tiny version this week
+Stop building features nobody asked for
+One metric for seven days
+Ask better questions in every meeting
+Write emails shorter than you think
+How to look useful without burning out
+Document what you learn once a week
+Volunteer for the project that grows you
+Leave work with a clean shutdown ritual
+Don't confuse motion with progress
+Busy is not the same as effective
+Operators win quietly
+Focus is a decision not a feeling
+Close open tabs to close open anxiety
+One room tidy equals a calmer mind
+Drink water before you chase caffeine
+Sleep is a productivity tool
+Stretch for five minutes between deep work
+Breathe for sixty seconds before you reply
+Kindness at work compounds faster than ego
+Thank one person who helped you this week
+How to disagree without drama
+Listen fully before you give advice
+Boundaries protect relationships with work
+Log off on time to show up better tomorrow
+Celebrate small wins out loud
+Confidence comes from kept promises to yourself
+You do not need more hours you need clearer goals
+Simplify until the next step is obvious
+Less stuff more space to think
+Unpack one worry by writing it down
+Replace doom news with one useful book page
+Start where you are with what you have
+The first draft is allowed to be messy
+Waiting for motivation is a trap
+Energy management beats time management
+Choose boring consistency over exciting chaos
+Make your future self proud by 9 PM
+Stop restarting start continuing
+One quiet evening resets your whole week
+Progress feels slow until it does not
+Your next level requires fewer distractions
+Be someone your past self needed
+Finish what you start then start smaller

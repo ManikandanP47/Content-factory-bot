@@ -33,6 +33,26 @@ def upload_youtube_short(
     creds = get_google_credentials()
     youtube = build("youtube", "v3", credentials=creds, cache_discovery=False)
 
+    # Confirm which channel this OAuth token will upload to (one-Gmail setups).
+    channels = (
+        youtube.channels()
+        .list(part="snippet", mine=True)
+        .execute()
+        .get("items")
+        or []
+    )
+    if channels:
+        ch = channels[0]["snippet"]
+        print(
+            f"[youtube] Authenticated channel: {ch.get('title')} "
+            f"(customUrl={ch.get('customUrl', 'n/a')})"
+        )
+    else:
+        print(
+            "[youtube] Warning: no channel returned for this Google account. "
+            "Uploads may fail or go to the wrong place."
+        )
+
     body: dict[str, Any] = {
         "snippet": {
             "title": title[:100],
