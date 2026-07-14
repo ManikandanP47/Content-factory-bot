@@ -134,8 +134,58 @@ content-factory/
   credentials/           # client_secrets.json, token.json
 ```
 
+## How to run (manual)
+
+```bash
+cd ~/content-factory
+source .venv/bin/activate
+
+# One Short / Reel (complete ending with CTA hold)
+content-factory produce --topic "Your topic here"
+
+# Review
+open output/<job_id>/final.mp4
+
+# Optional publish later
+content-factory publish --job <job_id> --channels drive,youtube
+```
+
+List jobs: `content-factory list-jobs` (or look in `output/`).
+
+## Local automation (your laptop, 09:00–20:00 IST)
+
+The bot is designed to run **on this Mac while you use it** (no server required).
+
+1. Put topics in [`config/topics.txt`](config/topics.txt) (one per line).
+2. Ensure Mac timezone is **Asia/Kolkata** (IST).
+3. Install the schedule (produces at **10:00, 14:00, 17:00** IST):
+
+```bash
+chmod +x scripts/*.sh
+./scripts/install_automation.sh install
+```
+
+4. Test once now:
+
+```bash
+./scripts/daily_run.sh
+```
+
+5. Logs: `output/logs/`. Uninstall: `./scripts/install_automation.sh uninstall`.
+
+Optional auto-upload after each produce (only when credentials exist):
+
+```bash
+# add to ~/.zshrc or a small env file sourced by the script
+export AUTO_PUBLISH=1
+export PUBLISH_CHANNELS=drive,youtube
+```
+
+Laptop must be **awake** at those times (not fully shut down). Sleep that allows background work is usually fine.
+
 ## Notes
 
 - Without Ollama, scripts use a solid structured fallback so produce never blocks.
 - Without Kokoro, edge-tts still sounds far more humane than classic robotic TTS.
+- Shorts now pad ~2.4s after narration so the CTA finishes (no mid-close cut).
 - Keep uploads private until you review `output/<job>/final.mp4`.

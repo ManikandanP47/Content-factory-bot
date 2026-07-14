@@ -267,14 +267,28 @@ export const Short: React.FC<ShortProps> = (props) => {
   const pop = interpolate(enter, [0, 1], [0.94, 1]);
   const progress = frame / Math.max(durationInFrames - 1, 1);
 
-  // Caption exit soften near beat end
-  const cueOut = interpolate(
-    ms,
-    [cue.end_ms - 280, cue.end_ms],
-    [1, 0.15],
+  const isLast = idx === captions.length - 1;
+  // Mid-beats soft-exit; final CTA holds until the end pad, then fades cleanly
+  const cueOut = isLast
+    ? interpolate(
+        frame,
+        [durationInFrames - Math.floor(fps * 0.9), durationInFrames - 1],
+        [1, 0],
+        {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
+      )
+    : interpolate(
+        ms,
+        [cue.end_ms - 280, cue.end_ms],
+        [1, 0.2],
+        {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
+      );
+  const captionOpacity = Math.min(enter, cueOut);
+  const globalFadeOut = interpolate(
+    frame,
+    [durationInFrames - Math.floor(fps * 0.85), durationInFrames - 1],
+    [1, 0],
     {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
   );
-  const captionOpacity = Math.min(enter, cueOut);
 
   const titleOpacity = interpolate(frame, [0, 10, 48, 78], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
@@ -314,6 +328,7 @@ export const Short: React.FC<ShortProps> = (props) => {
         fontFamily: '"Helvetica Neue", "Avenir Next", system-ui, sans-serif',
         color: brand.text,
         overflow: 'hidden',
+        opacity: globalFadeOut,
       }}
     >
       {hasPhotos ? (

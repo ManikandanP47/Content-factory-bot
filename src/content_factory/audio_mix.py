@@ -68,21 +68,35 @@ def mix_audio(
     music = _pick_music(music_dir)
     volume_db = float(audio_cfg.get("music_volume_db", -24))
 
-    if not _have_ffmpeg():
-        # copy through without mix
-        shutil.copy2(voice_path, out_path.with_suffix(voice_path.suffix))
-        return out_path.with_suffix(voice_path.suffix)
-
+    end_pad = float(audio_cfg.get("end_pad_seconds", 2.2))
     out_wav = out_path.with_suffix(".wav")
 
+    if not _have_ffmpeg():
+        # Pad with silence locally so endings still complete without ffmpeg
+        try:
+            import numpy as np
+            import soundfile as sf
+
+            audio, sr = sf.read(str(voice_path))
+            pad = np.zeros(int(sr * end_pad), dtype=np.float32)
+            if audio.ndim > 1:
+                pad = np.zeros((int(sr * end_pad), audio.shape[1]), dtype=np.float32)
+            sf.write(str(out_wav), np.concatenate([audio, pad]), sr)
+            return out_wav
+        except Exception:
+            shutil.copy2(voice_path, out_path.with_suffix(voice_path.suffix))
+            return out_path.with_suffix(voice_path.suffix)
+
     if music is None:
+        # Pad trailing silence so the Short can hold CTA without hard audio cut
+        af = f"{_VOICE_AF},apad=pad_dur={end_pad}"
         cmd = [
             "ffmpeg",
             "-y",
             "-i",
             str(voice_path),
             "-af",
-            _VOICE_AF,
+            af,
             "-ar",
             "48000",
             str(out_wav),
@@ -90,11 +104,11 @@ def mix_audio(
         subprocess.run(cmd, check=True, capture_output=True)
         return out_wav
 
-    # Soft bed under narration; fade bed in/out, follow voice length
+    # Soft bed under narration; pad after voice so ending completes fully
     filter_complex = (
         f"[1:a]volume={volume_db}dB,aloop=loop=-1:size=2e+09,"
-        f"afade=t=in:st=0:d=1.2,afade=t=out:st=999:d=0[bed];"
-        f"[0:a]{_VOICE_AF}[voice];"
+        f"afade=t=in:st=0:d=1.2[bed];"
+        f"[0:a]{_VOICE_AF},apad=pad_dur={end_pad}[voice];"
         f"[voice][bed]amix=inputs=2:duration=first:dropout_transition=2,"
         f"loudnorm=I=-14:TP=-1.5:LRA=9[a]"
     )

@@ -27,7 +27,13 @@ def _screen_line(text: str, max_len: int = 42) -> str:
     return (cut or text[: max_len - 1]) + "…"
 
 
-def build_caption_cues(script: VideoScript, duration_s: float) -> list[CaptionCue]:
+def build_caption_cues(
+    script: VideoScript,
+    duration_s: float,
+    *,
+    end_pad_s: float = 0.0,
+) -> list[CaptionCue]:
+    """Build captions across the spoken window; CTA holds through end pad."""
     # Prefer short on-screen lines (not full spoken paragraphs)
     segments: list[str] = (
         [_screen_line(script.hook, 40)]
@@ -36,11 +42,15 @@ def build_caption_cues(script: VideoScript, duration_s: float) -> list[CaptionCu
     )
     spoken = [script.hook] + [b.text for b in script.beats] + [script.cta]
     weights = [max(1, len(s.split())) for s in spoken]
+    # Bias the CTA / last beat so endings don't feel truncated
+    if weights:
+        weights[-1] = max(weights[-1], int(sum(weights) * 0.18) or 3)
     total_w = sum(weights) or 1
+    spoken_window = max(duration_s - max(end_pad_s, 0.0), duration_s * 0.75)
     cues: list[CaptionCue] = []
     cursor = 0.0
     for text, w in zip(segments, weights):
-        span = duration_s * (w / total_w)
+        span = spoken_window * (w / total_w)
         cues.append(
             CaptionCue(
                 text=text.strip()[:72],
@@ -50,6 +60,7 @@ def build_caption_cues(script: VideoScript, duration_s: float) -> list[CaptionCu
         )
         cursor += span
     if cues:
+        # Hold final CTA through the pad so the Short closes fully
         cues[-1].end_ms = int(duration_s * 1000)
     return cues
 
@@ -72,9 +83,11 @@ def write_remotion_props(
         text=brand_raw.get("text", "#F4F7F5"),
         muted=brand_raw.get("muted", "#A8B8C0"),
     )
-    duration_s = max(probe_duration_seconds(audio_path) + 0.4, 8.0)
-    frames = max(int(round(duration_s * fps)), fps * 8)
-    cues = build_caption_cues(script, duration_s)
+    # Audio mix already appends end_pad silence — duration follows mixed file.
+    end_pad_s = float(video_cfg.get("end_pad_seconds", 2.4))
+    duration_s = max(probe_duration_seconds(audio_path), 10.0)
+    frames = max(int(round(duration_s * fps)), fps * 10)
+    cues = build_caption_cues(script, duration_s, end_pad_s=end_pad_s)
 
     local_audio = job_dir / f"narration{audio_path.suffix}"
     if audio_path.resolve() != local_audio.resolve():

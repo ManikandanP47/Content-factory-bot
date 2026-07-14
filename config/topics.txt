@@ -1,0 +1,13 @@
+# One topic per line. Lines starting with # are ignored.
+# daily_run.sh consumes the next unused topic (checks off via .topics_done).
+
+Stop building features nobody asked for
+Why deep work beats busy work
+Ship a tiny version this week
+One metric for seven days
+Clarity beats hustle for founders
+Your calendar is lying to you
+Kill the meeting that kills your week
+Operators win quietly
+Don't confuse motion with progress
+Protect two deep-work blocks tomorrow

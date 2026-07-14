@@ -15,11 +15,14 @@ audio:
   music_volume_db: -26
   music_dir: assets/music
   normalize: true
+  end_pad_seconds: 2.4
 
 video:
   width: 1080
   height: 1920
   fps: 30
+  # Hold after narration so CTA finishes (no mid-close cut)
+  end_pad_seconds: 2.4
   brand:
     bg_top: "#07141C"
     bg_bottom: "#16384A"
