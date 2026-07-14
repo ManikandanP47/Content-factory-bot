@@ -74,6 +74,7 @@ class PublishResult(BaseModel):
     ok: bool
     detail: str = ""
     url: str | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class Job(BaseModel):
@@ -90,7 +91,22 @@ class Job(BaseModel):
     error: Optional[str] = None
     meta: dict[str, Any] = Field(default_factory=dict)
 
+    @property
+    def job_id(self) -> str:
+        return self.id
 
-# Back-compat alias used by older drafts
-JobStatus = Stage
+    @property
+    def video_path(self) -> str | None:
+        return self.paths.get("video") or self.paths.get("video_path")
+
+    @property
+    def drive(self) -> dict[str, Any] | None:
+        for r in reversed(self.publish_results):
+            if r.channel == "drive" and r.ok:
+                return r.meta or None
+        return self.meta.get("drive")
+
+
+# Back-compat: older drafts used JobStatus as the job record name
+JobStatus = Job
 Privacy = Literal["private", "unlisted", "public"]

@@ -34,6 +34,10 @@ cd video && npm install && cd ..
 # Produce one short
 content-factory produce --topic "Why founders should protect deep work"
 
+# Smoke test (script only / skip heavy render)
+content-factory produce --topic "Deep work tips" --dry-run-script
+content-factory produce --topic "Deep work tips" --skip-render
+
 # Publish (after credentials below)
 content-factory publish --job <job_id> --channels drive,youtube,instagram
 ```
@@ -45,8 +49,8 @@ Job files land in `output/<job_id>/` (`script.json`, voice/mixed audio, `props.j
 | Command | What it does |
 |---------|----------------|
 | `content-factory produce --topic "..."` | Script → voice → video |
-| `content-factory produce --topic "..." --dry-run` | Script only |
-| `content-factory produce --topic "..." --skip-video` | Stop after audio |
+| `content-factory produce --topic "..." --dry-run-script` | Script only |
+| `content-factory produce --topic "..." --skip-render` | Stop after audio |
 | `content-factory publish --job ID --channels drive,youtube` | Upload |
 | `content-factory publish --job ID --privacy public` | YouTube visibility |
 | `content-factory publish --job ID --channels instagram --instagram-video-url URL` | IG with public URL |
@@ -59,9 +63,10 @@ Config: [`config/default.yaml`](config/default.yaml). Secrets: copy [`.env.examp
 | Provider | Cost | Notes |
 |----------|------|--------|
 | **Kokoro-82M** (preferred) | Free, Apache-2.0, local | Natural neural speech; set `voice.provider: kokoro` or `auto` |
-| **edge-tts** (default fallback) | Free | Microsoft neural voices; no API key |
+| **edge-tts** (cloud fallback) | Free | Microsoft neural voices; no API key |
+| **macOS `say`** (local fallback) | Free | Used when Kokoro/edge unavailable (e.g. SSL issues) |
 
-`VOICE_PROVIDER=auto|kokoro|edge` in `.env` overrides config.
+`VOICE_PROVIDER=auto|kokoro|edge|macos` in `.env` overrides config.
 
 Optional bed music: drop CC0 `.mp3`/`.wav` into `assets/music/` (ducked ~−22 dB).
 

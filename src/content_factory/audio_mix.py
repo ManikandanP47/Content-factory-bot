@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from content_factory.config import project_root
+from content_factory.config import resolve_path
 
 
 def _have_ffmpeg() -> bool:
@@ -55,9 +55,7 @@ def mix_audio(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     audio_cfg = config.get("audio", {})
     music_rel = audio_cfg.get("music_dir", "assets/music")
-    music_dir = Path(music_rel)
-    if not music_dir.is_absolute():
-        music_dir = project_root() / music_dir
+    music_dir = resolve_path(music_rel)
     music = _pick_music(music_dir)
     volume_db = float(audio_cfg.get("music_volume_db", -22))
 

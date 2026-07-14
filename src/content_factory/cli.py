@@ -17,7 +17,7 @@ from content_factory.jobs import (
     slugify,
     update_job,
 )
-from content_factory.models import JobStatus
+from content_factory.models import Job, Stage
 from content_factory.script_writer import write_script
 from content_factory.video_bridge import render_video, write_remotion_props
 from content_factory.voice import synthesize_voice
@@ -34,54 +34,72 @@ def main() -> None:
 @click.option("--config", "config_path", default=None, help="Path to YAML config")
 @click.option(
     "--skip-video",
+    "--skip-render",
+    "skip_render",
     is_flag=True,
-    help="Stop after audio (useful for testing voice)",
+    help="Stop after audio (skip Remotion/FFmpeg render)",
 )
-@click.option("--dry-run", is_flag=True, help="Write script only")
+@click.option(
+    "--dry-run",
+    "--dry-run-script",
+    "dry_run_script",
+    is_flag=True,
+    help="Write script only (no voice/video)",
+)
 def produce(
-    topic: str, config_path: Optional[str], skip_video: bool, dry_run: bool
+    topic: str,
+    config_path: Optional[str],
+    skip_render: bool,
+    dry_run_script: bool,
 ) -> None:
     """Produce a local short (script + voice + video)."""
     config = load_config(config_path)
     job_id = new_job_id(topic)
     job_dir = output_dir(job_id)
-    status = JobStatus(job_id=job_id, topic=topic, stage="script")
-    save_job(status)
+    job = Job(id=job_id, topic=topic, status=Stage.created)
+    save_job(job)
 
     click.echo(f"[job] {job_id}")
     click.echo(f"[script] Writing for: {topic}")
     script = write_script(topic, config)
     script_path = save_script(job_id, script)
-    update_job(job_id, script_path=str(script_path), stage="script_done")
+    update_job(
+        job_id,
+        script=script,
+        script_path=str(script_path),
+        stage=Stage.scripted,
+    )
     click.echo(f"[script] {script.title}")
 
-    if dry_run:
-        click.echo("[dry-run] Stopping after script")
+    if dry_run_script:
+        click.echo("[dry-run-script] Stopping after script")
         return
 
     narration = script.full_narration()
     click.echo("[voice] Synthesizing narration…")
     voice_path = synthesize_voice(narration, job_dir / "voice", config)
-    update_job(job_id, voice_path=str(voice_path), stage="voice_done")
+    update_job(job_id, voice_path=str(voice_path), stage=Stage.voiced)
     click.echo(f"[voice] {voice_path}")
 
     click.echo("[audio] Mixing / normalizing…")
     mixed = mix_audio(voice_path, job_dir / "mixed", config)
-    update_job(job_id, mixed_audio_path=str(mixed), stage="audio_done")
+    update_job(job_id, mixed_audio_path=str(mixed), stage=Stage.mixed)
     click.echo(f"[audio] {mixed}")
 
-    if skip_video:
-        click.echo("[skip-video] Done")
+    if skip_render:
+        click.echo("[skip-render] Done")
         return
 
     click.echo("[video] Building props + render…")
     props_path, props = write_remotion_props(script, mixed, job_dir, config)
     update_job(job_id, props_path=str(props_path), stage="props_done")
     video_path = render_video(props_path, job_dir, props)
-    update_job(job_id, video_path=str(video_path), stage="complete")
+    update_job(job_id, video_path=str(video_path), stage=Stage.rendered)
     click.echo(f"[video] {video_path}")
     click.echo(f"[done] Job {job_id} ready. Publish with:")
-    click.echo(f'  content-factory publish --job {job_id} --channels drive,youtube')
+    click.echo(
+        f'  content-factory publish --job {job_id} --channels drive,youtube'
+    )
 
 
 @main.command("publish")
@@ -97,7 +115,11 @@ def produce(
     default=None,
 )
 @click.option("--dry-run", is_flag=True)
-@click.option("--instagram-video-url", default=None, help="Public HTTPS URL for IG Reels")
+@click.option(
+    "--instagram-video-url",
+    default=None,
+    help="Public HTTPS URL for IG Reels",
+)
 def publish(
     job_id: str,
     channels: str,
@@ -106,8 +128,6 @@ def publish(
     instagram_video_url: Optional[str],
 ) -> None:
     """Upload a produced job to Drive / YouTube / Instagram."""
-    import os
-
     config = load_config()
     status = load_job(job_id)
     script = load_script(job_id)
@@ -127,7 +147,7 @@ def publish(
             result = upload_job_to_drive(
                 job_dir, job_id, slugify(script.title), config
             )
-            update_job(job_id, drive=result, stage="published_drive")
+            update_job(job_id, drive=result, stage=Stage.uploaded_drive)
             click.echo(f"[drive] {result.get('folder_url')}")
         except Exception as exc:
             update_job(job_id, error=str(exc))
@@ -152,8 +172,8 @@ def publish(
                     config.get("channels", {}).get("youtube_category_id", "22")
                 ),
             )
-            update_job(job_id, youtube=result, stage="published_youtube")
-            click.echo(f"[youtube] {result.get('url')}")
+            update_job(job_id, youtube=result, stage=Stage.published)
+            click.echo(f"[youtube] {result.url or result.detail}")
         except Exception as exc:
             update_job(job_id, error=str(exc))
             click.echo(f"[youtube] FAILED: {exc}")
@@ -172,10 +192,10 @@ def publish(
         click.echo("[instagram] Publishing Reel…")
         try:
             if instagram_video_url:
-                os.environ["INSTAGRAM_VIDEO_URL"] = instagram_video_url
                 result = upload_instagram_reel(
                     video_path,
                     caption=caption,
+                    video_url=instagram_video_url,
                     share_to_feed=bool(
                         config.get("channels", {}).get(
                             "instagram_share_to_feed", True
@@ -195,8 +215,10 @@ def publish(
                 result = upload_instagram_reel_from_drive_link(
                     mp4["id"], caption=caption
                 )
-            update_job(job_id, instagram=result, stage="published_instagram")
-            click.echo(f"[instagram] media_id={result.get('media_id')}")
+            update_job(job_id, instagram=result, stage=Stage.published)
+            click.echo(
+                f"[instagram] {result.detail or result.meta.get('media_id')}"
+            )
         except Exception as exc:
             update_job(job_id, error=str(exc))
             click.echo(f"[instagram] FAILED: {exc}")
@@ -212,6 +234,9 @@ def status_cmd(job_id: str) -> None:
     status = load_job(job_id)
     click.echo(status.model_dump_json(indent=2))
 
+
+# Typer/entry-point alias: setuptools calls main(); click groups are callable
+app = main
 
 if __name__ == "__main__":
     main()

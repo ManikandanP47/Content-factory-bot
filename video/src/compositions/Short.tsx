@@ -23,6 +23,7 @@ export type Brand = {
   muted: string;
 };
 
+/** Mirrors Python ``RemotionProps`` in content_factory.models */
 export type ShortProps = {
   title: string;
   hook: string;
@@ -30,10 +31,36 @@ export type ShortProps = {
   beats_on_screen: string[];
   brand: Brand;
   audio_file: string;
+  audio_public_name: string;
   duration_in_frames: number;
   fps: number;
   width: number;
   height: number;
+};
+
+export const defaultShortProps: ShortProps = {
+  title: "Protect deep work",
+  hook: "Most people get focus completely wrong.",
+  captions: [
+    { text: "Most people get focus wrong", start_ms: 0, end_ms: 3000 },
+    { text: "Clarity beats hustle", start_ms: 3000, end_ms: 7000 },
+    { text: "One system. Two blocks.", start_ms: 7000, end_ms: 12000 },
+    { text: "Save this. Try it tomorrow.", start_ms: 12000, end_ms: 16000 },
+  ],
+  beats_on_screen: ["Clarity beats hustle", "One system. Two blocks."],
+  brand: {
+    bg_top: "#0B1F2A",
+    bg_bottom: "#143447",
+    accent: "#E8A54B",
+    text: "#F4F7F5",
+    muted: "#A8B8C0",
+  },
+  audio_file: "narration.wav",
+  audio_public_name: "",
+  duration_in_frames: 450,
+  fps: 30,
+  width: 1080,
+  height: 1920,
 };
 
 export const shortSchema = undefined;
@@ -106,7 +133,7 @@ const AccentBar: React.FC<{ brand: Brand; progress: number }> = ({
 export const Short: React.FC<ShortProps> = (props) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
-  const { brand, captions, title, audio_file } = props;
+  const { brand, captions, title, audio_file, audio_public_name } = props;
 
   const cue = activeCaption(captions, frame, fps);
   const enter = spring({
@@ -118,7 +145,6 @@ export const Short: React.FC<ShortProps> = (props) => {
   const opacity = interpolate(enter, [0, 1], [0, 1]);
   const progress = frame / Math.max(durationInFrames - 1, 1);
 
-  // subtle punch when caption changes
   const captionKey = cue?.text || "";
   const captionOpacity = interpolate(
     frame % Math.max(Math.floor(fps * 0.35), 1),
@@ -127,11 +153,14 @@ export const Short: React.FC<ShortProps> = (props) => {
     { extrapolateRight: "clamp" }
   );
 
+  const publicName = audio_public_name || audio_file;
   let audioSrc: string | null = null;
-  try {
-    audioSrc = staticFile(audio_file);
-  } catch {
-    audioSrc = null;
+  if (publicName) {
+    try {
+      audioSrc = staticFile(publicName);
+    } catch {
+      audioSrc = null;
+    }
   }
 
   return (
@@ -145,7 +174,6 @@ export const Short: React.FC<ShortProps> = (props) => {
     >
       <SoftOrbs brand={brand} />
 
-      {/* thin frame */}
       <div
         style={{
           position: "absolute",

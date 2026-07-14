@@ -7,6 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 from content_factory.google_auth import get_google_credentials
+from content_factory.models import PublishResult
 
 Privacy = Literal["private", "unlisted", "public"]
 
@@ -15,10 +16,12 @@ def upload_youtube_short(
     video_path: Path,
     title: str,
     description: str,
-    tags: list[str],
+    tags: list[str] | None = None,
     privacy: Privacy = "private",
     category_id: str = "22",
-) -> dict[str, Any]:
+) -> PublishResult:
+    """Upload a Short to YouTube. Returns PublishResult for the CLI/job store."""
+    tags = tags or []
     if not video_path.exists():
         raise FileNotFoundError(video_path)
 
@@ -30,7 +33,7 @@ def upload_youtube_short(
     creds = get_google_credentials()
     youtube = build("youtube", "v3", credentials=creds, cache_discovery=False)
 
-    body = {
+    body: dict[str, Any] = {
         "snippet": {
             "title": title[:100],
             "description": description[:5000],
@@ -58,8 +61,11 @@ def upload_youtube_short(
             print(f"[youtube] upload {int(status.progress() * 100)}%")
 
     video_id = response["id"]
-    return {
-        "video_id": video_id,
-        "url": f"https://youtube.com/shorts/{video_id}",
-        "privacy": privacy,
-    }
+    url = f"https://youtube.com/shorts/{video_id}"
+    return PublishResult(
+        channel="youtube",
+        ok=True,
+        detail=video_id,
+        url=url,
+        meta={"video_id": video_id, "privacy": privacy},
+    )

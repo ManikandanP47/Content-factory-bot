@@ -7,7 +7,9 @@ from typing import Any
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
+from content_factory.config import resolve_path
 from content_factory.google_auth import get_google_credentials
+from content_factory.models import PublishResult
 
 
 def _drive():
@@ -52,7 +54,11 @@ def upload_job_to_drive(
     slug: str,
     config: dict[str, Any],
 ) -> dict[str, Any]:
-    """Upload MP4 + script + props under Content Factory/YYYY-MM-DD/<slug>/."""
+    """Upload MP4 + script + props under Content Factory/YYYY-MM-DD/<slug>/.
+
+    Returns a dict (folder_id/files/folder_url) so CLI/update_job can store
+    it as PublishResult.meta. Use ``upload_job_to_drive_result`` for PublishResult.
+    """
     service = _drive()
     root_name = config.get("channels", {}).get(
         "drive_root_folder", "Content Factory"
@@ -61,6 +67,7 @@ def upload_job_to_drive(
     day_id = _ensure_folder(service, date.today().isoformat(), root_id)
     folder_id = _ensure_folder(service, slug or job_id, day_id)
 
+    job_dir = resolve_path(job_dir)
     uploaded: list[dict[str, str]] = []
     candidates = [
         job_dir / "final.mp4",
@@ -91,3 +98,19 @@ def upload_job_to_drive(
         "files": uploaded,
         "folder_url": f"https://drive.google.com/drive/folders/{folder_id}",
     }
+
+
+def upload_job_to_drive_result(
+    job_dir: Path,
+    job_id: str,
+    slug: str,
+    config: dict[str, Any],
+) -> PublishResult:
+    data = upload_job_to_drive(job_dir, job_id, slug, config)
+    return PublishResult(
+        channel="drive",
+        ok=True,
+        detail=data.get("folder_id", ""),
+        url=data.get("folder_url"),
+        meta=data,
+    )
