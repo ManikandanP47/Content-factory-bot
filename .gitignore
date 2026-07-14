@@ -13,9 +13,11 @@ credentials/*.json
 video/node_modules/
 video/out/
 video/.remotion/
+video/public/job-audio-*
 *.mp4
 *.wav
 *.mp3
+*.aiff
 .DS_Store
 token.json
 token_*.json

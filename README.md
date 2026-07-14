@@ -3,7 +3,7 @@
 Local, mostly-free pipeline that turns a **topic** into a faceless **YouTube Short / Instagram Reel**:
 
 1. Write a structured script (Ollama, with built-in fallback)
-2. Synthesize **humane** narration (**Kokoro** when available, else free **edge-tts** neural voice)
+2. Synthesize **humane** narration (**Kokoro** → **edge-tts** → **macOS say**)
 3. Render a clean **9:16** motion video (**Remotion**, FFmpeg fallback)
 4. Save artifacts to **Google Drive**
 5. Upload to **YouTube Shorts** and **Instagram Reels**
