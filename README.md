@@ -125,6 +125,23 @@ Google is blocking that Google account for device login (very common on **org/Wo
 
 Do **not** approve with org Gmail if IT has YouTube / third‑party apps restricted.
 
+### Other computer: auth only (no full bot install)
+
+You do **not** need Remotion, Piper, Ollama, or `pip install -e .` there. Only Python + 3 small packages:
+
+```bash
+git clone https://github.com/ManikandanP47/Content-factory-bot.git
+cd Content-factory-bot
+# Desktop OAuth JSON → credentials/client_secrets.json
+chmod +x scripts/google_login_minimal.sh
+./scripts/google_login_minimal.sh
+```
+
+Copy these two files back to the work Mac:
+
+- `credentials/token.json`
+- `credentials/client_secrets.json` (same Desktop client)
+
 YouTube default privacy is **private** (`YOUTUBE_PRIVACY` / `--privacy`). Flip to `public` after a successful test. `#Shorts` is added automatically.
 
 ## Instagram Reels (Graph API) — paused
