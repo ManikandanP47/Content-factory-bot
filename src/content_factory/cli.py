@@ -227,6 +227,31 @@ def publish(
     click.echo(f"[done] publish finished for {job_id}")
 
 
+@main.command("google-login")
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Delete existing token.json and login again",
+)
+@click.option(
+    "--flow",
+    type=click.Choice(["device", "browser"]),
+    default=None,
+    help="Override GOOGLE_OAUTH_FLOW (default: device)",
+)
+def google_login(force: bool, flow: Optional[str]) -> None:
+    """Authenticate Google (YouTube/Drive). Device flow: approve on your phone."""
+    import os
+
+    from content_factory.google_auth import run_google_login
+
+    if flow:
+        os.environ["GOOGLE_OAUTH_FLOW"] = flow
+    token_path = run_google_login(force=force)
+    click.echo(f"[google] Saved {token_path}")
+    click.echo("Next: content-factory publish --job <id> --channels youtube")
+
+
 @main.command("status")
 @click.option("--job", "job_id", required=True)
 def status_cmd(job_id: str) -> None:

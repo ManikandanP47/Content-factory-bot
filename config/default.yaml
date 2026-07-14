@@ -41,7 +41,7 @@ video:
 channels:
   drive_root_folder: Content Factory
   # Target channel for Shorts (OAuth must be with this channel's Google account)
-  youtube_channel: MoticateUrself
+  youtube_channel: MotivateUrSelf  # handle @MotivateUrSelf-y9h
   youtube_privacy: private  # flip to public after first successful test upload
   youtube_category_id: "22"
   # Instagram paused for now — YouTube Shorts only

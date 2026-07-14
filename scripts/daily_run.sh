@@ -69,7 +69,7 @@ if [[ $code -eq 0 ]]; then
   if [[ "${AUTO_PUBLISH:-0}" == "1" ]]; then
     job_id="$(ls -1t "$ROOT/output" | grep -v '^logs$' | head -1)"
     if [[ -n "$job_id" ]]; then
-      # Default: YouTube Shorts only (MoticateUrself). Set PUBLISH_CHANNELS to override.
+      # Default: YouTube Shorts only (MotivateUrSelf). Set PUBLISH_CHANNELS to override.
       echo "[publish] $job_id → ${PUBLISH_CHANNELS:-youtube}" | tee -a "$LOG"
       content-factory publish --job "$job_id" --channels "${PUBLISH_CHANNELS:-youtube}" >>"$LOG" 2>&1 || true
     fi

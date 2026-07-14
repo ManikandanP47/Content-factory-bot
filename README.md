@@ -87,22 +87,43 @@ cd video && npx remotion studio
 
 ## Google Drive + YouTube (OAuth)
 
-**Active target:** YouTube channel **MoticateUrself** (Shorts). Instagram is paused for now.
+**Active target:** YouTube channel **MotivateUrSelf** (`@MotivateUrSelf-y9h`) Shorts. Instagram is paused for now.
 
-1. Create a [Google Cloud](https://console.cloud.google.com/) project.
+### Recommended: device login (approve on your phone)
+
+Best when this Mac cannot open personal Gmail in a browser.
+
+1. Create a [Google Cloud](https://console.cloud.google.com/) project (personal Gmail is fine).
 2. Enable **Google Drive API** and **YouTube Data API v3**.
-3. Configure OAuth consent (External / testing OK for personal use).
-4. Create **OAuth client ID** → Application type **Desktop**.
-5. Download JSON → save as `credentials/client_secrets.json`.
-6. First publish opens a browser for consent — sign in with the Google account that owns **MoticateUrself**. Token is cached at `credentials/token.json`.
+3. Configure OAuth consent (External / testing OK). Add your **personal Gmail** as a **Test user**.
+4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
+   - Application type: **TVs and Limited Input devices** (required for device flow)
+   - Name: e.g. `content-factory-tv`
+5. Download JSON → save as `credentials/client_secrets.json` (replace any old Desktop client file).
+6. On this Mac:
 
 ```bash
-# YouTube Shorts only (recommended for now)
-content-factory publish --job <id> --channels youtube
-
-# Optional: also archive to Drive
-content-factory publish --job <id> --channels drive,youtube
+source .venv/bin/activate
+content-factory google-login
+# prints a URL + code — open on your phone with personal Gmail → Allow
 ```
+
+Token is saved at `credentials/token.json`. Then:
+
+```bash
+content-factory publish --job <id> --channels youtube --privacy private
+```
+
+Set `GOOGLE_OAUTH_FLOW=browser` only if you use a **Desktop** OAuth client and local browser login.
+
+**If phone shows “Service unavailable / isn’t available for your account”:**  
+Google is blocking that Google account for device login (very common on **org/Workspace** Gmail, or when YouTube is disabled for the account). Device flow will not work with that login. Use a **personal** Gmail that owns **MotivateUrSelf**, on a machine where personal Gmail works:
+
+1. Recreate/download a **Desktop** OAuth client → `credentials/client_secrets.json`
+2. On that machine: `GOOGLE_OAUTH_FLOW=browser content-factory google-login --force --flow browser`
+3. Copy `credentials/token.json` back to this Mac (same Desktop `client_secrets.json` here)
+
+Do **not** approve with org Gmail if IT has YouTube / third‑party apps restricted.
 
 YouTube default privacy is **private** (`YOUTUBE_PRIVACY` / `--privacy`). Flip to `public` after a successful test. `#Shorts` is added automatically.
 
@@ -188,7 +209,7 @@ Optional auto-upload after each produce (only when credentials exist):
 ```bash
 # add to ~/.zshrc or a small env file sourced by the script
 export AUTO_PUBLISH=1
-export PUBLISH_CHANNELS=youtube   # MoticateUrself Shorts only
+export PUBLISH_CHANNELS=youtube   # MotivateUrSelf Shorts only
 ```
 
 Laptop must be **awake** at those times (not fully shut down). Sleep that allows background work is usually fine.
