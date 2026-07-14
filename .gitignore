@@ -28,7 +28,7 @@ assets/broll/.usage.json
 tools/piper/**/*.tar.gz
 tools/piper/piper/
 tools/piper/x64/
-tools/piper/voices/*.onnx
+tools/piper/voices/
 .venv-voice/
 .DS_Store
 token.json
