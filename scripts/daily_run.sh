@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Daily Content Factory: random topic → fresh B-roll → produce → YouTube Short.
-# Up to 2 automatic posts/day (noon + evening IST) while laptop is awake 09:00–20:00.
+# Mon–Fri: 5 evening slots (17:00–21:00 IST) — post-work / night scroll peak.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -9,7 +9,6 @@ cd "$ROOT"
 export PATH="/Users/manikandan.palanisamy/homebrew/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 export TZ="Asia/Kolkata"
 
-# Load AUTO_PUBLISH, YOUTUBE_PRIVACY, etc.
 if [[ -f "$ROOT/.env" ]]; then
   set -a
   # shellcheck disable=SC1091
@@ -23,23 +22,34 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG="$LOG_DIR/daily-$STAMP.log"
 
 hour="$(date +%H)"
-if (( 10#$hour < 9 || 10#$hour >= 20 )); then
-  echo "[skip] Outside 09:00–20:00 IST (now $(date))" | tee -a "$LOG"
+# Active window: 09:00–21:59 IST (evening/night slots through 21:00)
+if (( 10#$hour < 9 || 10#$hour >= 22 )); then
+  echo "[skip] Outside 09:00–22:00 IST (now $(date))" | tee -a "$LOG"
   exit 0
 fi
 
-TODAY="$(date +%Y-%m-%d)"
-# noon slot ~12:00, evening slot ~17:30
-if (( 10#$hour < 15 )); then
-  SLOT="noon"
-else
-  SLOT="evening"
-fi
-LAST_RUN="$ROOT/config/.last_automation_${SLOT}"
-if [[ -f "$LAST_RUN" ]] && [[ "$(cat "$LAST_RUN" 2>/dev/null)" == "$TODAY" ]]; then
-  echo "[skip] Already ran $SLOT slot today ($TODAY)" | tee -a "$LOG"
+dow="$(date +%u)"  # 1=Mon … 7=Sun
+if [[ "${POST_ON_WEEKENDS:-0}" != "1" ]] && (( dow >= 6 )); then
+  echo "[skip] Weekends off — posts resume Monday (set POST_ON_WEEKENDS=1 to override)" | tee -a "$LOG"
   exit 0
 fi
+
+SLOT_DIR="$ROOT/config/.automation_slots"
+mkdir -p "$SLOT_DIR"
+SLOT_KEY="$(date +%Y-%m-%d-%H)"
+MARKER="$SLOT_DIR/$SLOT_KEY"
+if [[ -f "$MARKER" ]]; then
+  echo "[skip] Slot $SLOT_KEY already completed" | tee -a "$LOG"
+  exit 0
+fi
+
+LOCK_DIR="$ROOT/config/.automation.lockdir"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo "[skip] Previous run still in progress — will catch next slot" | tee -a "$LOG"
+  exit 0
+fi
+cleanup() { rmdir "$LOCK_DIR" 2>/dev/null || true; }
+trap cleanup EXIT
 
 source "$ROOT/.venv/bin/activate"
 
@@ -73,7 +83,7 @@ fi
 idx=$((RANDOM % ${#candidates[@]}))
 topic="${candidates[$idx]}"
 
-echo "[run] $(date) IST — slot=$SLOT — topic: $topic" | tee -a "$LOG"
+echo "[run] $(date) IST — slot=$SLOT_KEY — topic: $topic" | tee -a "$LOG"
 
 produce_log="$(mktemp)"
 set +e
@@ -97,14 +107,14 @@ if [[ $code -eq 0 && -n "$job_id" ]]; then
     pub_code=$?
     set -e
     if [[ $pub_code -eq 0 ]]; then
-      echo "$TODAY" > "$LAST_RUN"
-      echo "[ok] Published $job_id" | tee -a "$LOG"
+      touch "$MARKER"
+      echo "[ok] Published $job_id (slot $SLOT_KEY)" | tee -a "$LOG"
     else
       echo "[fail] publish exited $pub_code — see $LOG" | tee -a "$LOG"
       exit "$pub_code"
     fi
   else
-    echo "$TODAY" > "$LAST_RUN"
+    touch "$MARKER"
   fi
 else
   echo "[fail] produce exited $code — see $LOG" | tee -a "$LOG"

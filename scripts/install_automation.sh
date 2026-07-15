@@ -19,7 +19,7 @@ uninstall() {
 
 install() {
   uninstall
-  # Twice daily at 12:00 + 17:30 (IST). Two public Shorts/day for reach without spam.
+  # Mon–Fri: 5 evening slots (IST) — post-work / night Shorts scroll peak.
   cat > "$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -34,8 +34,11 @@ install() {
   </array>
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>0</integer></dict>
   </array>
   <key>WorkingDirectory</key>
   <string>${ROOT}</string>
@@ -46,6 +49,7 @@ install() {
     <key>PUBLISH_CHANNELS</key><string>youtube</string>
     <key>YOUTUBE_PRIVACY</key><string>public</string>
     <key>GOOGLE_OAUTH_FLOW</key><string>browser</string>
+    <key>POST_ON_WEEKENDS</key><string>0</string>
   </dict>
   <key>StandardOutPath</key>
   <string>${ROOT}/output/logs/launchd.out.log</string>
@@ -60,9 +64,10 @@ EOF
   launchctl bootstrap "gui/$(id -u)" "$PLIST"
   launchctl enable "gui/$(id -u)/$LABEL"
   echo "Installed $LABEL"
-  echo "  Schedule: daily 12:00 + 17:30 (2 public Shorts/day)"
-  echo "  Flow: random topic → fresh B-roll → produce → public YouTube Short"
-  echo "  Config: $ROOT/.env (AUTO_PUBLISH=1)"
+  echo "  Schedule (Mon–Fri): 17:00, 18:00, 19:00, 20:00, 21:00 IST"
+  echo "  5 public Shorts/day — evening / night scroll windows"
+  echo "  Mac must be awake ~17:00–22:00 on weekdays"
+  echo "  Config: $ROOT/.env"
   echo "  Test now: $SCRIPT"
   echo "  Uninstall: $0 uninstall"
 }

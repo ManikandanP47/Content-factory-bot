@@ -20,6 +20,8 @@ config/.topics_done
 config/.last_automation_date
 config/.last_automation_noon
 config/.last_automation_evening
+config/.automation_slots/
+config/.automation.lockdir/
 *.mp4
 *.wav
 *.mp3

@@ -200,9 +200,45 @@ content-factory publish --job <job_id> --channels drive,youtube
 
 List jobs: `content-factory list-jobs` (or look in `output/`).
 
-## Local automation (your laptop, 09:00–20:00 IST)
+## Local automation (your laptop, 09:00–22:00 IST weekdays)
 
-Runs **twice per day** at **12:00** and **17:30 IST**: each run = new topic, new script, fresh B-roll → **public** YouTube Short (**2 Shorts/day**).
+**Mon–Fri only** (Sat/Sun skipped). **5 public Shorts/day** in evening / night scroll windows:
+
+| Time (IST) | Audience moment |
+|---|---|
+| **17:00** | Leaving work / college |
+| **18:00** | Commute → unwind scroll |
+| **19:00** | Dinner break |
+| **20:00** | Prime evening Shorts |
+| **21:00** | Late-night wind-down |
+
+Each run: new random topic → fresh B-roll → produce → auto-upload (~**25 Shorts/week**).
+
+**Requirements:** Mac awake **~17:00–22:00** on weekdays (plugged in; prevent sleep during that window). Missed slots are skipped — no Monday catch-up burst.
+
+Weekends off by default (`POST_ON_WEEKENDS=0` in `.env`).
+
+### Keep the Mac awake (no admin required)
+
+**Without admin**, macOS cannot be woken from sleep automatically. Use this instead:
+
+```bash
+./scripts/setup_wake_schedule.sh install-no-admin
+```
+
+| What | Does |
+|---|---|
+| **Stay awake** | `caffeinate` Mon–Fri ~16:58–22:00 while you're logged in |
+| **Catch-up** | When you **open/login** between 17:00–22:00, posts **1 Short** if today's quota isn't met (max ~1/hour) |
+| **Scheduled slots** | Still fire at 17/18/19/20/21:00 **if laptop is already on** |
+
+**Your part (no IT needed):**
+- Open laptop **Mon–Fri ~17:00–22:00** (logged in, lid open, plugged in if possible)
+- Don't fully shut down before evening — sleep is OK if you open it by 17:00
+
+If IT forces sleep and `caffeinate` is blocked, the only fixes are: **personal Mac**, **home PC**, or **cloud runner** (we can set that up later).
+
+Admin-only option (needs sudo): `./scripts/setup_wake_schedule.sh wake-only`
 
 1. Topics: [`config/topics.txt`](config/topics.txt) — random unused line each day (`config/.topics_done`).
 2. Visuals: unique B-roll per job (`assets/broll/.usage.json` rotation).
