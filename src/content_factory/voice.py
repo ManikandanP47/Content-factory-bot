@@ -184,6 +184,17 @@ def _synthesize_macos_say(text: str, out_path: Path, voice: str) -> Path:
     return aiff
 
 
+def _synthesize_espeak(text: str, out_path: Path, voice: str, speed: float) -> Path:
+    espeak = shutil.which("espeak-ng") or shutil.which("espeak")
+    if not espeak:
+        raise RuntimeError("espeak-ng not available")
+    wav = out_path.with_suffix(".wav")
+    wpm = int(175 * speed)
+    cmd = [espeak, "-v", voice, "-s", str(wpm), "-w", str(wav), text]
+    subprocess.run(cmd, check=True, capture_output=True)
+    return wav
+
+
 def synthesize_voice(text: str, out_path: Path, config: dict[str, Any]) -> Path:
     """
     Prefer genuine AI **male** neural voice:
@@ -192,6 +203,7 @@ def synthesize_voice(text: str, out_path: Path, config: dict[str, Any]) -> Path:
       2. Kokoro am_adam (if `.venv-voice` / install available)
       3. edge-tts AndrewNeural
       4. macOS Daniel
+      5. espeak-ng (offline last resort — no network/model download needed)
     """
     voice_cfg = config.get("voice", {})
     provider = (voice_cfg.get("provider") or "auto").lower()
@@ -205,6 +217,7 @@ def synthesize_voice(text: str, out_path: Path, config: dict[str, Any]) -> Path:
     speed = float(voice_cfg.get("speed", 0.95))
     edge_voice = voice_cfg.get("edge_voice", "en-US-AndrewNeural")
     macos_voice = voice_cfg.get("macos_voice", "Daniel")
+    espeak_voice = voice_cfg.get("espeak_voice", "en-us+m3")
 
     def try_piper() -> Path | None:
         if not _piper_available() and provider != "piper":
@@ -275,13 +288,25 @@ def synthesize_voice(text: str, out_path: Path, config: dict[str, Any]) -> Path:
                 raise
             return None
 
+    def try_espeak() -> Path | None:
+        try:
+            print(f"[voice] espeak-ng offline fallback ({espeak_voice})")
+            return _synthesize_espeak(text, out_path, espeak_voice, speed)
+        except Exception as exc:
+            errors.append(f"espeak: {exc}")
+            print(f"[voice] espeak-ng failed ({exc})")
+            if provider == "espeak":
+                raise
+            return None
+
     order = {
-        "auto": (try_piper, try_kokoro, try_edge, try_say),
+        "auto": (try_piper, try_kokoro, try_edge, try_say, try_espeak),
         "piper": (try_piper,),
         "kokoro": (try_kokoro,),
         "edge": (try_edge,),
         "macos": (try_say,),
-    }.get(provider, (try_piper, try_kokoro, try_edge, try_say))
+        "espeak": (try_espeak,),
+    }.get(provider, (try_piper, try_kokoro, try_edge, try_say, try_espeak))
 
     for fn in order:
         result = fn()
