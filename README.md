@@ -202,31 +202,32 @@ List jobs: `content-factory list-jobs` (or look in `output/`).
 
 ## Local automation (your laptop, 09:00–20:00 IST)
 
-The bot is designed to run **on this Mac while you use it** (no server required).
+Runs **twice per day** at **12:00** and **17:30 IST**: each run = new topic, new script, fresh B-roll → **public** YouTube Short (**2 Shorts/day**).
 
-1. Broad topics live in [`config/topics.txt`](config/topics.txt) (one punchy line each). `daily_run.sh` **picks randomly** from topics not yet in `config/.topics_done` (no immediate repeats); when the pool is exhausted it resets and reshuffles. You do not need to hand-pick a topic each day—add/edit lines only if you want to expand the pool.
-2. Ensure Mac timezone is **Asia/Kolkata** (IST).
-3. Install the schedule (produces at **10:00, 14:00, 17:00** IST):
+1. Topics: [`config/topics.txt`](config/topics.txt) — random unused line each day (`config/.topics_done`).
+2. Visuals: unique B-roll per job (`assets/broll/.usage.json` rotation).
+3. Copy `.env.example` → `.env` with `AUTO_PUBLISH=1` and `credentials/token.json` in place.
+4. Install:
 
 ```bash
 chmod +x scripts/*.sh
 ./scripts/install_automation.sh install
 ```
 
-4. Test once now:
+5. Test once (skips if already ran today):
 
 ```bash
 ./scripts/daily_run.sh
 ```
 
-5. Logs: `output/logs/`. Uninstall: `./scripts/install_automation.sh uninstall`.
+6. Logs: `output/logs/`. Uninstall: `./scripts/install_automation.sh uninstall`.
 
-Optional auto-upload after each produce (only when credentials exist):
+`.env` defaults (also set in launchd):
 
 ```bash
-# add to ~/.zshrc or a small env file sourced by the script
-export AUTO_PUBLISH=1
-export PUBLISH_CHANNELS=youtube   # MotivateUrSelf Shorts only
+AUTO_PUBLISH=1
+PUBLISH_CHANNELS=youtube
+YOUTUBE_PRIVACY=public
 ```
 
 Laptop must be **awake** at those times (not fully shut down). Sleep that allows background work is usually fine.

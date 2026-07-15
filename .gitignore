@@ -16,6 +16,10 @@ video/.remotion/
 video/public/job-audio-*
 video/public/broll-*
 assets/broll/.usage.json
+config/.topics_done
+config/.last_automation_date
+config/.last_automation_noon
+config/.last_automation_evening
 *.mp4
 *.wav
 *.mp3
